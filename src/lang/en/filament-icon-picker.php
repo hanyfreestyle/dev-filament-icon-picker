@@ -1,0 +1,1 @@
+<?phpreturn [    'label' => 'Select an icon',    'placeholder' => 'Search icons...',];

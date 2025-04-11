@@ -15,10 +15,11 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 use Symfony\Component\Finder\SplFileInfo;
+use Guava\FilamentIconPicker\Forms\Concerns\HasIconValidation;
 
-class IconPicker extends Select
-{
+class IconPicker extends Select {
     use CanBeCacheable;
+    use HasIconValidation;
 
     protected string $view = 'filament-icon-picker::forms.icon-picker';
 
@@ -35,13 +36,16 @@ class IconPicker extends Select
 
     protected bool|Closure $show;
 
-    protected function setUp(): void
-    {
+    protected function setUp(): void {
         parent::setUp();
 
         $this->sets(config('icon-picker.sets', null));
         $this->columns(config('icon-picker.columns', 1));
         $this->layout(config('icon-picker.layout', Layout::FLOATING));
+
+        $this->afterStateHydrated(function (IconPicker $component, $state) {
+            $component->state($component->validateIconName($state));
+        });
 
         $this->getSearchResultsUsing = function (IconPicker $component, string $search, Collection $icons) {
 
@@ -79,72 +83,61 @@ class IconPicker extends Select
      * @param array|string|Closure|null $sets
      * @return $this
      */
-    public function sets(array|Closure|string|null $sets = null): static
-    {
+    public function sets(array|Closure|string|null $sets = null): static {
         $this->sets = $sets ? (is_string($sets) ? [$sets] : $sets) : null;
 
         return $this;
     }
 
-    public function getSets(): ?array
-    {
+    public function getSets(): ?array {
         return $this->evaluate($this->sets);
     }
 
-    public function allowedIcons(array|Closure|string $allowedIcons): static
-    {
+    public function allowedIcons(array|Closure|string $allowedIcons): static {
         $this->allowedIcons = $allowedIcons;
 
         return $this;
     }
 
-    public function getAllowedIcons(): ?array
-    {
+    public function getAllowedIcons(): ?array {
         return $this->evaluate($this->allowedIcons, [
             'sets' => $this->getSets(),
         ]);
     }
 
-    public function disallowedIcons(array|Closure|string $disallowedIcons): static
-    {
+    public function disallowedIcons(array|Closure|string $disallowedIcons): static {
         $this->disallowedIcons = $disallowedIcons;
 
         return $this;
     }
 
-    public function getDisallowedIcons(): ?array
-    {
+    public function getDisallowedIcons(): ?array {
         return $this->evaluate($this->disallowedIcons, [
             'sets' => $this->getSets(),
         ]);
     }
 
-    public function layout(string|Closure $layout): static
-    {
+    public function layout(string|Closure $layout): static {
         $this->layout = $layout;
 
         return $this;
     }
 
-    public function getLayout(): string
-    {
+    public function getLayout(): string {
         return $this->evaluate($this->layout);
     }
 
-    public function itemTemplate(Htmlable|Closure|View $template): static
-    {
+    public function itemTemplate(Htmlable|Closure|View $template): static {
         $this->itemTemplate = $template;
 
         return $this;
     }
 
-    public function getItemTemplate(array $options = []): string
-    {
+    public function getItemTemplate(array $options = []): string {
         return $this->evaluate($this->itemTemplate, $options);
     }
 
-    public function getSearchResults(string $search): array
-    {
+    public function getSearchResults(string $search): array {
         if (!$this->getSearchResultsUsing) {
             return [];
         }
@@ -166,8 +159,7 @@ class IconPicker extends Select
     /**
      * Enact the preload logic (if, and only if, the user wants to preload the icons)
      */
-    protected function doPreload(): void
-    {
+    protected function doPreload(): void {
         if (!$this->isPreloaded()) {
             return;
         }
@@ -193,14 +185,13 @@ class IconPicker extends Select
         parent::options($options);
     }
 
-    public function getOptions(): array
-    {
+    public function getOptions(): array {
         $this->doPreload();
         return parent::getOptions();
     }
 
 
-     /**
+    /**
      * Marks the calling method as not allowed (whether because it's not supported or because it's meaningless when using this field)
      * @throws \BadMethodCallException Always
      */
@@ -209,106 +200,94 @@ class IconPicker extends Select
     }
 
     /**
-     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      * @throws \BadMethodCallException
+     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      */
-    public function relationship(string|Closure|null $name = null, string|Closure|null $titleAttribute = null, ?Closure $modifyQueryUsing = null, bool $ignoreRecord = false): static
-    {
+    public function relationship(string|Closure|null $name = null, string|Closure|null $titleAttribute = null, ?Closure $modifyQueryUsing = null, bool $ignoreRecord = false): static {
         $this->markAsNotAllowed();
     }
 
     /**
-     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      * @throws \BadMethodCallException
+     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      */
-    public function options(Arrayable|Closure|array|string|null $options): static
-    {
+    public function options(Arrayable|Closure|array|string|null $options): static {
         $this->markAsNotAllowed();
     }
 
     /**
-     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      * @throws \BadMethodCallException
+     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      */
-    public function allowHtml(bool|Closure $condition = true): static
-    {
+    public function allowHtml(bool|Closure $condition = true): static {
         $this->markAsNotAllowed();
     }
 
     /**
-     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      * @throws \BadMethodCallException
+     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      */
-    public function searchable(bool|array|Closure $condition = true): static
-    {
+    public function searchable(bool|array|Closure $condition = true): static {
         $this->markAsNotAllowed();
     }
 
     /**
-     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      * @throws \BadMethodCallException
+     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      */
-    public function getSearchResultsUsing(?Closure $callback): static
-    {
+    public function getSearchResultsUsing(?Closure $callback): static {
         $this->markAsNotAllowed();
     }
 
     /**
-     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      * @throws \BadMethodCallException
+     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      */
-    public function getOptionLabelFromRecordUsing(?Closure $callback): static
-    {
+    public function getOptionLabelFromRecordUsing(?Closure $callback): static {
         $this->markAsNotAllowed();
     }
 
     /**
-     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      * @throws \BadMethodCallException
+     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      */
-    public function createOptionUsing(?Closure $callback): static
-    {
+    public function createOptionUsing(?Closure $callback): static {
         $this->markAsNotAllowed();
     }
 
     /**
-     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      * @throws \BadMethodCallException
+     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      */
-    public function createOptionAction(?Closure $callback): static
-    {
+    public function createOptionAction(?Closure $callback): static {
         $this->markAsNotAllowed();
     }
 
     /**
-     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      * @throws \BadMethodCallException
+     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      */
-    public function createOptionForm(array|Closure|null $schema): static
-    {
+    public function createOptionForm(array|Closure|null $schema): static {
         $this->markAsNotAllowed();
     }
 
     /**
-     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      * @throws \BadMethodCallException
+     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      */
-    public function schema(array|Closure $components): static
-    {
+    public function schema(array|Closure $components): static {
         $this->markAsNotAllowed();
     }
 
     /**
-     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      * @throws \BadMethodCallException
+     * @deprecated Method inherited from `\Filament\Forms\Components\Select` but not supported (or meaningless) when using this field
      */
-    public function multiple(bool|Closure $condition = true): static
-    {
+    public function multiple(bool|Closure $condition = true): static {
         $this->markAsNotAllowed();
     }
 
-    private function loadIcons(): Collection
-    {
+    private function loadIcons(): Collection {
         $iconsHash = md5(serialize($this->getSets()));
         $key = "icon-picker.fields.{$iconsHash}.{$this->getStatePath()}";
 
@@ -334,8 +313,8 @@ class IconPicker extends Select
         $allowedHash = md5(serialize($allowedIcons));
         $disallowedHash = md5(serialize($disallowedIcons));
         $iconsKey = "icon-picker.fields.icons.{$iconsHash}.{$allowedSetsHash}.{$allowedHash}.{$disallowedHash}.{$this->getStatePath()}";
-        
-        $icons = $this->tryCache($iconsKey, function() use($sets, $allowedIcons, $disallowedIcons) {
+
+        $icons = $this->tryCache($iconsKey, function () use ($sets, $allowedIcons, $disallowedIcons) {
             $icons = [];
 
             foreach ($sets as $set) {
